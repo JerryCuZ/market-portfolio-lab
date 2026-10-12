@@ -11,3 +11,9 @@ This is a learning-oriented research repository. Small, explainable changes are 
 7. Keep source notebooks and their authoring helpers consistent. Only refresh curated reports after reviewing executed outputs.
 
 Report bugs with the Python version, command, expected behavior and a small synthetic example where possible. Do not post credentials or private portfolio information in issues.
+
+## Lesson completion and publication
+
+After each completed lesson, publish its reviewed code, curated report and learning Q&A to GitHub. Update project documentation when its scope or assumptions change, run the applicable checks, inspect the final diff, then commit and push to `JerryCuZ/market-portfolio-lab`. Check GitHub Actions and report publication and validation status to the learner. Documentation-only edits may use `git diff --check`; code and research behavior changes require the tests above and relevant lesson execution.
+
+This is the user's standing project-maintenance instruction. The agent workflow is recorded in `AGENTS.md`.
