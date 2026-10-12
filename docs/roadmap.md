@@ -1,0 +1,30 @@
+# Roadmap
+
+## Implemented
+
+- [x] Real-data snapshot acquisition, validation and checksum verification.
+- [x] Returns, distributions, volatility, drawdowns and changing correlations.
+- [x] Fixed-weight hold/monthly baselines and an auditable cash/share ledger.
+- [x] Inverse-volatility targets and risk-contribution analysis.
+- [x] Correlation-aware equal risk contribution and solver checks.
+- [x] Dated target schedule interface shared by allocation models.
+- [x] Fifteen offline tests and four executed learning reports.
+
+## Next research questions
+
+- [ ] How do position limits change concentration and risk-budget equality?
+- [ ] How stable are covariance estimates across windows and estimation methods?
+- [ ] Can rebalance thresholds reduce costs without excessive allocation drift?
+- [ ] Do simple trend signals add value over the existing risk-allocation baselines?
+- [ ] How accurate are forward risk forecasts, separately from portfolio performance?
+
+## Later, when prerequisites are met
+
+- [ ] Linear/tree models followed by more complex ML only against credible simple baselines.
+- [ ] AI-assisted research or text features with provenance, availability timestamps and evaluation.
+- [ ] User-supplied positions and cash, decision reports and explainable proposed trades.
+- [ ] Frozen-rule forward simulation, anomaly handling and persistent decision archives.
+- [ ] Paper-broker adapter, actual distribution payment dates, settlement and execution calibration.
+- [ ] Additional assets/strategies with instrument-specific data and accounting.
+
+No deadline or promise of profitability is implied. Real trading requires a separately reviewed implementation; a new model must not bypass account, timing or execution constraints. High-frequency and derivatives strategies require new data and mechanics, not simply a model swap.

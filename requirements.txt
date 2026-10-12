@@ -1,0 +1,13 @@
+# Core research environment; exact tested versions are in requirements-lock.txt.
+--only-binary=:all:
+numpy>=1.26,<3
+pandas>=2.2,<3
+scipy>=1.12,<2
+matplotlib>=3.8,<4
+plotly>=5.20,<7
+pyarrow>=15
+yfinance>=0.2.54,<2
+scikit-learn>=1.5,<2
+skfolio>=0.8,<1
+jupyterlab>=4.2,<5
+ipykernel>=6.29,<8
