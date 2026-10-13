@@ -3,6 +3,31 @@ import numpy as np
 import pandas as pd
 
 
+def cap_weights(weights, cap=0.5):
+    """Cap-and-proportionally-redistribute positive fully invested targets.
+
+    This is an explicit allocation overlay, NOT a constrained ERC optimizer.
+    The cap applies to targets; market drift can exceed it between trades.
+    """
+    w = pd.Series(weights, dtype=float)
+    if (w.empty or not w.index.is_unique or not np.isfinite(w).all()
+            or (w <= 0).any() or not np.isclose(w.sum(), 1, atol=1e-12, rtol=0)
+            or not np.isfinite(cap) or not 0 < cap <= 1 or len(w)*cap < 1-1e-12):
+        raise ValueError('Need positive normalized weights and a feasible cap')
+    result = pd.Series(0., index=w.index)
+    free = pd.Series(True, index=w.index)
+    while free.any():
+        allocation = w[free] / w[free].sum() * (1-result.sum())
+        hit = allocation > cap
+        if not hit.any():
+            result.loc[allocation.index] = allocation
+            break
+        locked = allocation.index[hit]
+        result.loc[locked] = cap
+        free.loc[locked] = False
+    return result
+
+
 def risk_contributions(weights, covariance):
     """Euler contributions to volatility; contributions can be negative.
 

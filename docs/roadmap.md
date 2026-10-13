@@ -8,13 +8,14 @@
 - [x] Inverse-volatility targets and risk-contribution analysis.
 - [x] Correlation-aware equal risk contribution and solver checks.
 - [x] Dated target schedule interface shared by allocation models.
-- [x] Fifteen offline tests and four executed learning reports.
+- [x] Eighteen offline tests and five executed learning reports.
 
-## Next research questions
+## Experiments completed and next research questions
 
-- [ ] How do position limits change concentration and risk-budget equality?
-- [ ] How stable are covariance estimates across windows and estimation methods?
-- [ ] Can rebalance thresholds reduce costs without excessive allocation drift?
+- [x] Proportional target caps and their departure from equal risk contributions.
+- [x] Window sensitivity across 63/126/252 prior returns on a common interval.
+- [ ] Covariance shrinkage and alternative estimation methods.
+- [x] Monthly prior-close rebalance threshold experiment, including cost and drift measurements.
 - [ ] Do simple trend signals add value over the existing risk-allocation baselines?
 - [ ] How accurate are forward risk forecasts, separately from portfolio performance?
 

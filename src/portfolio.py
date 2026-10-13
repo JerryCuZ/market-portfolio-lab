@@ -41,7 +41,7 @@ class BacktestResult:
 
 
 def simulate(frames, weights, initial_cash=100_000., cost_bps=5., monthly=True,
-             target_schedule=None):
+             target_schedule=None, rebalance_threshold=None):
     """Fixed target policy; monthly=False holds initial shares, distributions in cash.
 
     Rates are per side, proportional to gross traded notional, combining assumed
@@ -49,8 +49,15 @@ def simulate(frames, weights, initial_cash=100_000., cost_bps=5., monthly=True,
     Weights may sum to <= 1; the remainder targets zero-interest cash.
     Optional schedule: execution dates as index, asset weight columns and
     decision_date strictly before execution. Schedule overrides monthly timing.
+    Optional threshold: at scheduled opportunities, trade only if the largest
+    asset-or-cash weight gap at the prior close exceeds the threshold. Initial
+    investment is mandatory. Threshold requires prior-session decisions.
     """
     symbols = list(weights)
+    if rebalance_threshold is not None:
+        if (target_schedule is None or not np.isfinite(rebalance_threshold)
+                or not 0 <= rebalance_threshold <= 1):
+            raise ValueError('Threshold needs a schedule and a value in [0, 1]')
     target = np.array([weights[s] for s in symbols], dtype=float)
     if (not symbols or not np.isfinite(target).all() or (target < 0).any()
             or target.sum() > 1 + 1e-12 or target.sum() <= 0):
@@ -91,6 +98,10 @@ def simulate(frames, weights, initial_cash=100_000., cost_bps=5., monthly=True,
         if decisions.isna().any() or (decisions.to_numpy() >= schedule.index.to_numpy()).any():
             raise ValueError('Decisions must be dated strictly before execution')
         schedule['decision_date'] = decisions
+        if rebalance_threshold is not None:
+            for date in schedule.index[1:]:
+                if schedule.loc[date, 'decision_date'] != dates[dates.get_loc(date)-1]:
+                    raise ValueError('Threshold decisions must use the prior session close')
 
     opens = np.column_stack([frames[s]['Open'] for s in symbols])
     closes = np.column_stack([frames[s]['Close'] for s in symbols])
@@ -101,6 +112,8 @@ def simulate(frames, weights, initial_cash=100_000., cost_bps=5., monthly=True,
     trade_rows, distribution_rows, daily_rows = [], [], []
     accumulated_fees = accumulated_distributions = 0.
     for i, date in enumerate(dates):
+        # Save decision-time holdings before today's distributions and opening gap.
+        prior_cash = cash
         # Entitlement belongs to shares held before this day's opening trades.
         distribution = shares * dividends[i]
         for j, s in enumerate(symbols):
@@ -119,6 +132,15 @@ def simulate(frames, weights, initial_cash=100_000., cost_bps=5., monthly=True,
             if rebalance:
                 target = schedule.loc[date, symbols].to_numpy(dtype=float)
                 decision_date = schedule.loc[date, 'decision_date']
+        opportunity = rebalance
+        decision_gap = np.nan
+        if rebalance and i > 0 and rebalance_threshold is not None:
+            prior_values = shares * closes[i-1]
+            prior_nav = prior_cash + prior_values.sum()
+            actual = np.r_[prior_values / prior_nav, prior_cash / prior_nav]
+            desired = np.r_[target, 1-target.sum()]
+            decision_gap = float(np.max(np.abs(actual-desired)))
+            rebalance = decision_gap > rebalance_threshold
         day_fee = 0.
         if rebalance:
             # Solve V_after + rate * sum(abs(target * V_after - current)) = V_before.
@@ -153,7 +175,8 @@ def simulate(frames, weights, initial_cash=100_000., cost_bps=5., monthly=True,
         nav = cash + values.sum()
         row = dict(date=date, nav=nav, cash=cash, distribution=distribution.sum(),
                    fees=day_fee, cumulative_fees=accumulated_fees,
-                   cumulative_distributions=accumulated_distributions, rebalance=rebalance)
+                   cumulative_distributions=accumulated_distributions, rebalance=rebalance,
+                   rebalance_opportunity=opportunity, decision_weight_gap=decision_gap)
         for j, s in enumerate(symbols):
             row.update({f'{s}_shares': shares[j], f'{s}_value': values[j],
                         f'{s}_weight': values[j]/nav, f'{s}_pretrade_weight': pre_weights[j]})

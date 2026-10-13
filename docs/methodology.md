@@ -32,3 +32,13 @@ CAGR uses the calendar span; volatility is daily account return standard deviati
 Risk contribution is an Euler decomposition of estimated portfolio volatility. It is not a probability, realized P&L attribution or maximum-drawdown decomposition. Negative contributions represent offsets in the estimated covariance model; other contributions can exceed 100%.
 
 Existing history has been inspected. Sequential historical calculations and no-lookahead tests do not establish an untouched out-of-sample result. Portfolios have different exposures and total risk; return differences are not automatically alpha. Further work must test estimation stability, constraints, costs and frozen rules on new observations.
+
+## Lesson 05: stability and execution constraints
+
+Use 63/126/252 prior adjusted returns, with all scenarios starting afresh at the first shared execution date after the longest warm-up. Keep USD 100,000 and 5 bps per side unchanged. The 126-day ERC baseline is compared separately against each overlay; cap and threshold are not combined.
+
+The 50% cap locks excessive weights and proportionally redistributes to remaining assets, repeating if necessary. It preserves full investment but is not a constrained risk-budget optimizer. Original ERC solver diagnostics are removed from the modified schedule. Recomputed risk shares audit the departure. Caps govern targets, not continuous actual holdings.
+
+The 3-percentage-point threshold checks the maximum absolute difference between prior-close actual and new target weights, including cash, at monthly opportunities. Only a strictly greater gap triggers a full rebalance; initial investment always occurs. Decision dates must match the previous observed session after initial entry. Today's opening gap and distributions do not enter the prior-close trigger. Fills still use idealized next-open sizing, not actual broker orders. Daily ledgers record opportunities, triggers and decision gaps.
+
+Target instability is the mean sum of absolute month-to-month asset target changes, excluding the initial undefined change. Holding drift is the maximum asset-or-cash absolute target gap at each daily close. Gross turnover is total absolute daily traded notional divided by prior-close NAV (initial capital on day one), summed and divided by calendar years; includes entry and is explicitly two-sided. It is not the one-way half-turnover convention. These teaching parameters are not tuned or out-of-sample validated.

@@ -4,7 +4,7 @@
 
 从真实行情出发，逐步建立“研究 → 配置 → 模拟执行 → 对账 → 复盘”的工作流程。英文概览便于展示；课程、问答和研究解释以中文为主。
 
-**Status:** four completed lessons; 15 offline tests; historical simulation only. No live trading, broker integration, or proven alpha claim.
+**Status:** five completed lessons; 18 offline tests; historical simulation only. No live trading, broker integration, or proven alpha claim.
 
 ## Start here
 
@@ -21,6 +21,8 @@
 3. Why are capital weights different from contributions to portfolio volatility?
 4. Does equal risk contribution improve outcomes relative to inverse-volatility allocation?
 
+5. How do estimation windows, position caps and rebalance thresholds change stability and execution?
+
 The project studies SPY (US large-cap equities), IEF (US intermediate Treasury bonds), and GLD (gold). These are teaching assets, not a personalized allocation recommendation.
 
 ## Learning sequence
@@ -31,6 +33,8 @@ The project studies SPY (US large-cap equities), IEF (US intermediate Treasury b
 | 02 Portfolio ledger | [Notebook](notebooks/02_portfolio_ledger.ipynb) | [Report](docs/reports/02_portfolio_ledger.html) | Shares, cash, distributions, trades and reconciliation |
 | 03 Risk allocation | [Notebook](notebooks/03_risk_allocation.ipynb) | [Report](docs/reports/03_risk_allocation.html) | Risk decomposition and inverse-volatility targets |
 | 04 Equal risk contribution | [Notebook](notebooks/04_equal_risk.ipynb) | [Report](docs/reports/04_equal_risk.html) | Correlation-aware allocation and solver validation |
+
+| 05 Allocation constraints | [Notebook](notebooks/05_allocation_constraints.ipynb) | [Report](docs/reports/05_allocation_constraints.html) | Window sensitivity, target caps, prior-close rebalance thresholds |
 
 GitHub renders notebooks directly. HTML files should be downloaded or opened locally; GitHub Pages is not configured. Saved outputs are illustrative historical runs, not current market signals.
 
@@ -48,6 +52,8 @@ Common comparison period: **2010-08-02 through 2026-10-06**. Initial capital: **
 **Finding:** equalizing estimated risk contributions did not improve every investment outcome. ERC slightly increased historical return and reduced volatility relative to inverse volatility, but had a deeper maximum drawdown and higher modeled fees. Total risk is not matched across portfolios; differences are not estimates of alpha.
 
 ![Capital weights versus estimated risk contributions at the first decision](docs/figures/first_decision.png)
+
+Lesson 05 uses a later common start after 252-return warm-up. Its capped target overlay is not an ERC optimizer; thresholds use prior-close asset and cash weights. Its results must be compared within that lesson, not directly to the longer sample above.
 
 ## Architecture
 
@@ -67,7 +73,7 @@ Reconciliation, performance evaluation, learning reports
 - `src/portfolio.py`: fixed/scheduled targets, transaction costs, distributions, cash and shares.
 - `src/risk_models.py`: risk contributions, inverse-volatility allocation, ERC solver.
 - `tests/`: hand-calculated accounting cases, solver invariants, timing and future-data perturbation tests.
-- `scripts/run_lessons.py`: rerun the four lessons on one explicitly selected local snapshot.
+- `scripts/run_lessons.py`: rerun the five lessons on one explicitly selected local snapshot.
 - `notebooks/`: explanations and executed examples; `build_*.py` are authoring helpers, not required for normal use.
 - `docs/`: methodology, Q&A, roadmap, curated reports and figure.
 - `data/`, `reports/`: local data and generated run artifacts, excluded from Git.
