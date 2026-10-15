@@ -46,7 +46,8 @@ def simulate(frames, weights, initial_cash=100_000., cost_bps=5., monthly=True,
 
     Rates are per side, proportional to gross traded notional, combining assumed
     fees and execution friction. Actual fills at Open are an idealized model.
-    Weights may sum to <= 1; the remainder targets zero-interest cash.
+    Weights may sum to [0, 1]; all-zero weights explicitly target all cash.
+    The remainder targets zero-interest cash.
     Optional schedule: execution dates as index, asset weight columns and
     decision_date strictly before execution. Schedule overrides monthly timing.
     Optional threshold: at scheduled opportunities, trade only if the largest
@@ -60,8 +61,8 @@ def simulate(frames, weights, initial_cash=100_000., cost_bps=5., monthly=True,
             raise ValueError('Threshold needs a schedule and a value in [0, 1]')
     target = np.array([weights[s] for s in symbols], dtype=float)
     if (not symbols or not np.isfinite(target).all() or (target < 0).any()
-            or target.sum() > 1 + 1e-12 or target.sum() <= 0):
-        raise ValueError('Weights must be finite, nonnegative and sum to (0, 1]')
+            or target.sum() > 1 + 1e-12):
+        raise ValueError('Weights must be finite, nonnegative and sum to [0, 1]')
     if not np.isfinite(initial_cash) or initial_cash <= 0:
         raise ValueError('Initial capital must be positive')
     if not np.isfinite(cost_bps) or not 0 <= cost_bps < 10_000:
@@ -92,7 +93,7 @@ def simulate(frames, weights, initial_cash=100_000., cost_bps=5., monthly=True,
             raise ValueError('Schedule needs every asset and decision_date')
         vals = schedule[symbols].to_numpy(dtype=float)
         if (not np.isfinite(vals).all() or (vals < 0).any()
-                or (vals.sum(axis=1) > 1 + 1e-12).any() or (vals.sum(axis=1) <= 0).any()):
+                or (vals.sum(axis=1) > 1 + 1e-12).any()):
             raise ValueError('Invalid scheduled weights')
         decisions = pd.to_datetime(schedule['decision_date'])
         if decisions.isna().any() or (decisions.to_numpy() >= schedule.index.to_numpy()).any():

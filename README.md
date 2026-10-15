@@ -4,7 +4,7 @@
 
 从真实行情出发，逐步建立“研究 → 配置 → 模拟执行 → 对账 → 复盘”的工作流程。英文概览便于展示；课程、问答和研究解释以中文为主。
 
-**Status:** five completed lessons; 18 offline tests; historical simulation only. No live trading, broker integration, or proven alpha claim.
+**Status:** six completed lessons; 23 offline tests; historical simulation only. No live trading, broker integration, or proven alpha claim.
 
 ## Start here
 
@@ -13,6 +13,14 @@
 - [Reproduction guide](docs/reproducibility.md) — setup, data acquisition, and sequential execution.
 - [Roadmap](docs/roadmap.md) — implemented capabilities versus planned research.
 - [Development notes](docs/development_notes.md) — original Chinese project record; generated `reports/` paths refer to local artifacts.
+
+## Learning stages
+
+- **Stage I — allocation and accounting (01–05):** risk budgets, constraints, timing, costs and a reconciled ledger.
+- **Stage II — signals and strategy validation (06 onward):** turn observations into exposures; assess benefits, cash effects, failure modes and validation quality. Lesson 06 adds a fixed monthly 200-day-SMA filter to ERC, leaving disabled allocations in cash.
+- **Later:** frozen-rule forward simulation and decision reports; ML only after credible baselines and validation.
+
+See the [lesson 06 research design](docs/06_research_design.md). Historical segments are descriptive diagnostics, not untouched out-of-sample evidence.
 
 ## Research questions
 
@@ -36,6 +44,8 @@ The project studies SPY (US large-cap equities), IEF (US intermediate Treasury b
 
 | 05 Allocation constraints | [Notebook](notebooks/05_allocation_constraints.ipynb) | [Report](docs/reports/05_allocation_constraints.html) | Window sensitivity, target caps, prior-close rebalance thresholds |
 
+| 06 Trend filter | [Notebook](notebooks/06_trend_filter.ipynb) | [Report](docs/reports/06_trend_filter.html) | Signal-to-weight mapping, cash, lag, annual diagnostics and costs |
+
 GitHub renders notebooks directly. HTML files should be downloaded or opened locally; GitHub Pages is not configured. Saved outputs are illustrative historical runs, not current market signals.
 
 ## Selected historical results
@@ -55,12 +65,14 @@ Common comparison period: **2010-08-02 through 2026-10-06**. Initial capital: **
 
 Lesson 05 uses a later common start after 252-return warm-up. Its capped target overlay is not an ERC optimizer; thresholds use prior-close asset and cash weights. Its results must be compared within that lesson, not directly to the longer sample above.
 
+Lesson 06 (2011-02-01–2026-10-06): adding the fixed SMA filter reduced historical maximum drawdown from 17.89% to 10.86%, but CAGR fell from 6.28% to 4.72%. Average actual cash rose to 29.60%, and modeled fees increased. This is a documented tradeoff, not evidence of timing alpha; see the lesson for annual failures and validation limits.
+
 ## Architecture
 
 ```text
 Immutable market snapshot
         ↓
-Historical return / covariance estimates
+Historical return / covariance estimates and trend signals
         ↓
 Dated target weights (decision date < execution date)
         ↓
@@ -71,9 +83,10 @@ Reconciliation, performance evaluation, learning reports
 
 - `src/market_data.py`: download snapshots, validate data, verify checksums.
 - `src/portfolio.py`: fixed/scheduled targets, transaction costs, distributions, cash and shares.
+- `src/signals.py`: audited prior-close SMA filter; disabled allocations remain in cash.
 - `src/risk_models.py`: risk contributions, inverse-volatility allocation, ERC solver.
 - `tests/`: hand-calculated accounting cases, solver invariants, timing and future-data perturbation tests.
-- `scripts/run_lessons.py`: rerun the five lessons on one explicitly selected local snapshot.
+- `scripts/run_lessons.py`: rerun the six lessons on one explicitly selected local snapshot.
 - `notebooks/`: explanations and executed examples; `build_*.py` are authoring helpers, not required for normal use.
 - `docs/`: methodology, Q&A, roadmap, curated reports and figure.
 - `data/`, `reports/`: local data and generated run artifacts, excluded from Git.

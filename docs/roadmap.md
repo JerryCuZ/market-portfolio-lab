@@ -8,7 +8,7 @@
 - [x] Inverse-volatility targets and risk-contribution analysis.
 - [x] Correlation-aware equal risk contribution and solver checks.
 - [x] Dated target schedule interface shared by allocation models.
-- [x] Eighteen offline tests and five executed learning reports.
+- [x] Twenty-three offline tests and six executed learning reports.
 
 ## Experiments completed and next research questions
 
@@ -16,8 +16,12 @@
 - [x] Window sensitivity across 63/126/252 prior returns on a common interval.
 - [ ] Covariance shrinkage and alternative estimation methods.
 - [x] Monthly prior-close rebalance threshold experiment, including cost and drift measurements.
-- [ ] Do simple trend signals add value over the existing risk-allocation baselines?
+- [x] First fixed 200-day SMA long/cash overlay experiment, annual and historical-segment diagnostics, 0/5/20 bps sensitivity.
+- [ ] Distinguish timing value from reduced exposure using credible controls.
+- [ ] Cash-yield sensitivity and a frozen-rule forward-validation protocol.
 - [ ] How accurate are forward risk forecasts, separately from portfolio performance?
+
+Stage I (lessons 01–05) built allocation/accounting foundations. Stage II starts at lesson 06 with signal research; a completed experiment does not establish strategy effectiveness.
 
 ## Later, when prerequisites are met
 
