@@ -25,6 +25,20 @@ Stage I (lessons 01–05) built allocation/accounting foundations. Stage II star
 
 ## Later, when prerequisites are met
 
+### Beyond long-only, unlevered ETFs — requested progression
+
+These are planned simulation capabilities, not implemented features. Introduce them progressively after exposure controls, cash-yield treatment and a credible signal-validation protocol are established; do not add complexity simply to improve a backtest.
+
+1. **Exposure measurement:** distinguish market value, notional exposure, gross/net exposure and factor sensitivity. Produce exposure reports that reconcile to positions and explain why low net exposure need not mean low risk.
+2. **Financing and leverage:** add borrowing balances, financing rates, leverage limits, margin requirements and forced-reduction scenarios. Validate interest, NAV and stress behavior on hand-calculated fixtures before comparing leveraged strategies.
+3. **Short selling:** model negative holdings, borrow availability/fees, dividend payments owed, collateral and recall/cover scenarios. Test P&L and cash independently before constructing a long/short experiment.
+4. **Futures as an instrument extension:** add contract multipliers, margin, daily settlement, expiry and rolls using appropriate real contract data. Separate collateral from economic exposure; a continuous price series alone is not a tradable account.
+5. **Options only after these foundations:** introduce nonlinear exposure, Greeks, expiry/exercise and liquidity with suitable data. Treat this as a separate instrument module, not negative ETF weights.
+
+Each step should include a beginner explanation, explicit data/assumption limits, reconciled accounting tests and a small comparison against the existing baseline. Timing depends on learning readiness and data quality, not a fixed lesson number. No broker action or actual financing is implied.
+
+### Other extensions
+
 - [ ] Linear/tree models followed by more complex ML only against credible simple baselines.
 - [ ] AI-assisted research or text features with provenance, availability timestamps and evaluation.
 - [ ] User-supplied positions and cash, decision reports and explainable proposed trades.
