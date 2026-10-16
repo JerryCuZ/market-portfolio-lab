@@ -8,7 +8,7 @@
 - [x] Inverse-volatility targets and risk-contribution analysis.
 - [x] Correlation-aware equal risk contribution and solver checks.
 - [x] Dated target schedule interface shared by allocation models.
-- [x] Twenty-three offline tests and six executed learning reports.
+- [x] Twenty-six offline tests and seven executed learning reports.
 
 ## Experiments completed and next research questions
 
@@ -17,7 +17,8 @@
 - [ ] Covariance shrinkage and alternative estimation methods.
 - [x] Monthly prior-close rebalance threshold experiment, including cost and drift measurements.
 - [x] First fixed 200-day SMA long/cash overlay experiment, annual and historical-segment diagnostics, 0/5/20 bps sensitivity.
-- [ ] Distinguish timing value from reduced exposure using credible controls.
+- [x] Initial fixed-70%, dynamic-total and explicitly post-hoc mean-target exposure comparisons (lesson 07).
+- [ ] Establish signal value with prior-information controls and prospective evidence; lesson 07 does not prove timing alpha.
 - [ ] Cash-yield sensitivity and a frozen-rule forward-validation protocol.
 - [ ] How accurate are forward risk forecasts, separately from portfolio performance?
 
