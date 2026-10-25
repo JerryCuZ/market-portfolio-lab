@@ -4,7 +4,7 @@
 
 从真实行情出发，逐步建立“研究 → 配置 → 模拟执行 → 对账 → 复盘”的工作流程。英文概览便于展示；课程、问答和研究解释以中文为主。
 
-**Status:** seven completed lessons; 26 offline tests; historical simulation only. No live trading, broker integration, or proven alpha claim.
+**Status:** eight completed lessons; 30 offline tests; historical simulation only. No live trading, broker integration, or proven alpha claim.
 
 ## Start here
 
@@ -48,6 +48,8 @@ The project studies SPY (US large-cap equities), IEF (US intermediate Treasury b
 
 | 07 Exposure controls | [Notebook](notebooks/07_exposure_controls.ipynb) | [Report](docs/reports/07_exposure_controls.html) | Fixed exposure, dynamic scaling and labeled post-hoc diagnostics |
 
+| 08 Cash yield | [Notebook](notebooks/08_cash_yield.ipynb) | [Report](docs/reports/08_cash_yield.html) | Historical rate scenarios, interest reconciliation and validation protocol |
+
 GitHub renders notebooks directly. HTML files should be downloaded or opened locally; GitHub Pages is not configured. Saved outputs are illustrative historical runs, not current market signals.
 
 ## Selected historical results
@@ -71,6 +73,8 @@ Lesson 06 (2011-02-01–2026-10-06): adding the fixed SMA filter reduced histori
 
 Lesson 07 adds explicit exposure controls: fixed 70% ERC returned 4.40% CAGR with a 12.80% maximum drawdown; scaling ERC by each month’s trend total exposure returned 4.78% with a 10.62% drawdown. The 70.20% full-sample mean-target control is labeled **POSTHOC**, not a tradable historical strategy. Similar exposure does not imply matched risk or causal attribution.
 
+Lesson 08 keeps these rules and adds historical DFF cash-rate scenarios. Trend CAGR rises from 4.72% (zero) to 5.17% (lagged reference) or 4.99% (reference minus 100 bps, floored at zero); ERC remains about 6.28%. These are proxy-yield sensitivities, not attainable broker quotes or evidence of alpha. See the [validation protocol](docs/validation_protocol.md); prospective recording has not started.
+
 ## Architecture
 
 ```text
@@ -86,12 +90,13 @@ Reconciliation, performance evaluation, learning reports
 ```
 
 - `src/market_data.py`: download snapshots, validate data, verify checksums.
+- `src/cash_rates.py`: checksummed FRED DFF snapshots and explicitly lagged rate schedules.
 - `src/portfolio.py`: fixed/scheduled targets, transaction costs, distributions, cash and shares.
 - `src/controls.py`: validated scaling of dated targets for explicit exposure controls.
 - `src/signals.py`: audited prior-close SMA filter; disabled allocations remain in cash.
 - `src/risk_models.py`: risk contributions, inverse-volatility allocation, ERC solver.
 - `tests/`: hand-calculated accounting cases, solver invariants, timing and future-data perturbation tests.
-- `scripts/run_lessons.py`: rerun the seven lessons on one explicitly selected local snapshot.
+- `scripts/run_lessons.py`: rerun the eight lessons on one explicitly selected local snapshot.
 - `notebooks/`: explanations and executed examples; `build_*.py` are authoring helpers, not required for normal use.
 - `docs/`: methodology, Q&A, roadmap, curated reports and figure.
 - `data/`, `reports/`: local data and generated run artifacts, excluded from Git.
@@ -114,10 +119,11 @@ Download data yourself, subject to the provider's terms, then run the lessons:
 
 ```bash
 python src/market_data.py --start 2010-01-01 --end 2026-10-07
-python scripts/run_lessons.py --snapshot latest
+python src/cash_rates.py --start 2010-01-01 --end 2026-10-06
+python scripts/run_lessons.py --snapshot latest --rates-snapshot latest
 ```
 
-The end date is exclusive. Re-downloading the same interval can yield revised data and different results. Raw prices are **not distributed** in this repository. See [reproduction details](docs/reproducibility.md) before comparing numbers.
+The ETF end date is exclusive; the cash-rate date range is inclusive. Re-downloading the same interval can yield revised data and different results. Raw prices are **not distributed** in this repository. See [reproduction details](docs/reproducibility.md) before comparing numbers.
 
 To read or edit interactively:
 
@@ -131,7 +137,7 @@ For manual notebook execution, set `MARKET_LAB_SNAPSHOT` to a local snapshot ID 
 
 The offline test suite checks accounting identities, distribution entitlement, month-boundary execution, future-data invariance, and ERC analytical properties. CI runs these tests on synthetic fixtures; it does not download Yahoo data or establish strategy profitability.
 
-Current simplifications include ex-date cash availability, idealized opening fills, zero-interest cash, no personal taxes, and historical data revisions. Not a production trading system or investment advice.
+Current simplifications include ex-date cash availability, idealized opening fills, proxy cash yields rather than broker-specific interest, no personal taxes, and historical data revisions. Not a production trading system or investment advice.
 
 ## Development
 

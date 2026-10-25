@@ -13,9 +13,9 @@ Risk estimation uses provider-adjusted close-to-close returns. The cash/share le
 - Dynamic targets use only prior-close observations. Current opening prices determine quantities, an idealized sizing/fill assumption rather than an executable opening-auction algorithm.
 - Cost: 5 bps of absolute traded notional on each side, inclusive modeled friction; not a broker quote. Holdings are sized after accounting for these costs.
 - Distributions belong to prior-close holders and are immediately credited on the ex-date. Actual payment dates and settlement are not modeled.
-- Cash earns zero interest. No personal taxes, borrowing, order queue, market impact or settlement delays.
+- Cash earns zero interest by default; lesson 08 enables explicit proxy-rate scenarios. No personal taxes, borrowing, order queue, market impact or settlement delays.
 - Splits/capital-gain distributions are rejected rather than silently mishandled.
-- Reconciliation independently rebuilds cash and share balances from transaction/distribution records.
+- Reconciliation independently rebuilds cash and share balances from transaction/distribution/interest records.
 
 ## Comparisons
 
@@ -56,3 +56,11 @@ Annual returns compound daily ledger returns, including entry fees; first/last y
 See [fixed design](07_research_design.md). `fixed_70` scales each fully invested ERC target by 0.70; the round number was chosen after seeing prior historical results, not independently validated. `dynamic_total` scales ERC by the same decision's sum of trend weights, keeping ERC proportions and matching monthly target total exposure only. `matched_mean_POSTHOC` scales ERC by the full-sample mean of monthly trend total targets: future-informed diagnostic, not a tradable historical rule. Mean daily actual exposure and realized volatility can differ for every control.
 
 The scaling helper preserves dates, requires prior decisions and exact series alignment, and removes inapplicable ERC solver diagnostics. It cannot certify provenance of user-supplied exposure factors. Full ledgers, costs, annual results (partial first/last years), and 0/5 bps pairs are retained. Policy contrasts do not provide additive causal attribution, matched-risk alpha or statistical significance. Cash remains zero-yield; exposure-sensitive cash-return assumptions are the next research step.
+
+## Lesson 08: cash-yield sensitivity
+
+[Fixed design](08_research_design.md) keeps the same four non-POSTHOC lesson 07 target schedules, dates and 5 bps costs. FRED DFF percent observations are converted to decimals and checked against immutable snapshot hashes. Compare zero yield, lagged DFF, and lagged DFF minus 100 bps floored at zero. DFF is an interbank reference, not an investable product or actual retail yield.
+
+At each interval start select the latest observation at least seven calendar days old; reject data more than three additional days stale. This artificial availability rule does not establish historical publication timing or remove revisions. The annual rate is fixed across the interval. Interest equals prior-close cash times rate times elapsed calendar days / 360, credited before current distributions and trades; first day earns zero. There is no internal weekend compounding, but subsequent posting dates compound. Interest principal, dates, amount and cash reconciliation are independently checked. Actual payment dates, tiered rates, settlement and tax remain omitted. Interest reinvestment changes subsequent positions and fees, so cumulative interest is not the same as terminal NAV uplift.
+
+The [validation protocol](validation_protocol.md) specifies prospective freezing and decision archiving; these are documented requirements, not an already running forward account.

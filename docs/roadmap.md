@@ -8,7 +8,7 @@
 - [x] Inverse-volatility targets and risk-contribution analysis.
 - [x] Correlation-aware equal risk contribution and solver checks.
 - [x] Dated target schedule interface shared by allocation models.
-- [x] Twenty-six offline tests and seven executed learning reports.
+- [x] Thirty offline tests and eight executed learning reports.
 
 ## Experiments completed and next research questions
 
@@ -19,7 +19,8 @@
 - [x] First fixed 200-day SMA long/cash overlay experiment, annual and historical-segment diagnostics, 0/5/20 bps sensitivity.
 - [x] Initial fixed-70%, dynamic-total and explicitly post-hoc mean-target exposure comparisons (lesson 07).
 - [ ] Establish signal value with prior-information controls and prospective evidence; lesson 07 does not prove timing alpha.
-- [ ] Cash-yield sensitivity and a frozen-rule forward-validation protocol.
+- [x] Cash-yield sensitivity with historical FRED DFF and a documented frozen-rule validation protocol (lesson 08).
+- [ ] Implement prospective data/decision archives and formally start frozen-rule forward simulation; the protocol alone is not forward evidence.
 - [ ] How accurate are forward risk forecasts, separately from portfolio performance?
 
 Stage I (lessons 01–05) built allocation/accounting foundations. Stage II starts at lesson 06 with signal research; a completed experiment does not establish strategy effectiveness.

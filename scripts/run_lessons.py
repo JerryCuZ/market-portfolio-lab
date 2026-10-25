@@ -15,10 +15,13 @@ from market_data import load_snapshot
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--snapshot', default='latest', help='Local snapshot ID, or latest')
+    parser.add_argument('--rates-snapshot', help='Lesson 08 local DFF snapshot ID, or latest')
     args = parser.parse_args()
     _, manifest = load_snapshot(None if args.snapshot == 'latest' else args.snapshot)
     snapshot = manifest['snapshot']
     os.environ['MARKET_LAB_SNAPSHOT'] = snapshot
+    if args.rates_snapshot:
+        os.environ['MARKET_LAB_RATE_SNAPSHOT'] = args.rates_snapshot
     for key, part in [('MPLCONFIGDIR', 'matplotlib'), ('IPYTHONDIR', 'ipython'),
                       ('JUPYTER_CONFIG_DIR', 'jupyter/config'), ('JUPYTER_RUNTIME_DIR', 'jupyter/runtime')]:
         folder = ROOT / '.cache' / part

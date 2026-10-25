@@ -18,6 +18,7 @@ class BacktestResult:
     distributions: pd.DataFrame
     initial_cash: float
     cost_bps: float
+    interest_events: pd.DataFrame | None = None
 
     def metrics(self):
         nav = self.daily['nav']
@@ -37,11 +38,12 @@ class BacktestResult:
             'trade_days': self.trades['date'].nunique(),
             'distributions_received': self.distributions['amount'].sum(),
             'ending_cash': self.daily['cash'].iloc[-1],
+            'interest_received': self.daily['interest'].sum() if 'interest' in self.daily else 0.,
         })
 
 
 def simulate(frames, weights, initial_cash=100_000., cost_bps=5., monthly=True,
-             target_schedule=None, rebalance_threshold=None):
+             target_schedule=None, rebalance_threshold=None, cash_rates=None):
     """Fixed target policy; monthly=False holds initial shares, distributions in cash.
 
     Rates are per side, proportional to gross traded notional, combining assumed
@@ -53,6 +55,10 @@ def simulate(frames, weights, initial_cash=100_000., cost_bps=5., monthly=True,
     Optional threshold: at scheduled opportunities, trade only if the largest
     asset-or-cash weight gap at the prior close exceeds the threshold. Initial
     investment is mandatory. Threshold requires prior-session decisions.
+    Optional cash_rates: exact date-aligned table with annual_rate (decimal)
+    and assumed_available_date no later than previous close. Interest accrues
+    on previous closing cash, simple ACT/360 over elapsed calendar days, and
+    is credited before today's distributions and trades. No initial interest.
     """
     symbols = list(weights)
     if rebalance_threshold is not None:
@@ -105,16 +111,37 @@ def simulate(frames, weights, initial_cash=100_000., cost_bps=5., monthly=True,
                     raise ValueError('Threshold decisions must use the prior session close')
 
     opens = np.column_stack([frames[s]['Open'] for s in symbols])
+    if cash_rates is not None:
+        if (not cash_rates.index.equals(dates)
+                or not {'annual_rate','assumed_available_date'}.issubset(cash_rates.columns)):
+            raise ValueError('Cash rates need exact calendar alignment and availability dates')
+        cash_rates = cash_rates.copy()
+        yields = cash_rates.annual_rate.to_numpy(dtype=float)
+        availability = pd.to_datetime(cash_rates.assumed_available_date)
+        starts = pd.DatetimeIndex([dates[0], *dates[:-1]])
+        if (not np.isfinite(yields).all() or ((yields<0)|(yields>1)).any()
+                or availability.isna().any() or (availability.to_numpy()>starts.to_numpy()).any()):
+            raise ValueError('Cash rates must be nonnegative and available at interval start')
     closes = np.column_stack([frames[s]['Close'] for s in symbols])
     dividends = np.column_stack([frames[s]['Dividends'] for s in symbols])
     shares = np.zeros(len(symbols))
     cash = float(initial_cash)
     rate = cost_bps / 10_000
     trade_rows, distribution_rows, daily_rows = [], [], []
-    accumulated_fees = accumulated_distributions = 0.
+    accumulated_fees = accumulated_distributions = accumulated_interest = 0.
+    interest_rows = []
     for i, date in enumerate(dates):
         # Save decision-time holdings before today's distributions and opening gap.
         prior_cash = cash
+        interest = 0.
+        if cash_rates is not None and i > 0:
+            annual_rate = float(cash_rates.annual_rate.iloc[i])
+            days = (date-dates[i-1]).days
+            interest = prior_cash * annual_rate * days / 360
+            interest_rows.append(dict(date=date,period_start=dates[i-1],
+                principal=prior_cash,annual_rate=annual_rate,days=days,amount=interest))
+            cash += interest
+            accumulated_interest += interest
         # Entitlement belongs to shares held before this day's opening trades.
         distribution = shares * dividends[i]
         for j, s in enumerate(symbols):
@@ -177,7 +204,8 @@ def simulate(frames, weights, initial_cash=100_000., cost_bps=5., monthly=True,
         row = dict(date=date, nav=nav, cash=cash, distribution=distribution.sum(),
                    fees=day_fee, cumulative_fees=accumulated_fees,
                    cumulative_distributions=accumulated_distributions, rebalance=rebalance,
-                   rebalance_opportunity=opportunity, decision_weight_gap=decision_gap)
+                   rebalance_opportunity=opportunity, decision_weight_gap=decision_gap,
+                   interest=interest,cumulative_interest=accumulated_interest)
         for j, s in enumerate(symbols):
             row.update({f'{s}_shares': shares[j], f'{s}_value': values[j],
                         f'{s}_weight': values[j]/nav, f'{s}_pretrade_weight': pre_weights[j]})
@@ -186,7 +214,8 @@ def simulate(frames, weights, initial_cash=100_000., cost_bps=5., monthly=True,
         pd.DataFrame(daily_rows).set_index('date'),
         pd.DataFrame(trade_rows, columns=['date','decision_date','asset','reason','shares','price','notional','fee']),
         pd.DataFrame(distribution_rows, columns=['date','asset','eligible_shares','per_share','amount']),
-        initial_cash, cost_bps)
+        initial_cash, cost_bps,
+        pd.DataFrame(interest_rows,columns=['date','period_start','principal','annual_rate','days','amount']))
 
 
 def reconcile(result):
@@ -197,7 +226,17 @@ def reconcile(result):
     d = result.distributions
     outgoing = (t['notional'] + t['fee']).groupby(t['date']).sum().reindex(dates, fill_value=0)
     incoming = d.groupby('date')['amount'].sum().reindex(dates, fill_value=0)
-    reconstructed_cash = result.initial_cash + (incoming - outgoing).cumsum()
+    interest = pd.Series(0., index=dates)
+    if result.interest_events is not None and not result.interest_events.empty:
+        events = result.interest_events
+        expected_principal = daily.cash.shift(1).reindex(pd.DatetimeIndex(events.date)).to_numpy()
+        expected_days = (pd.DatetimeIndex(events.date)-pd.DatetimeIndex(events.period_start)).days
+        if (not np.allclose(events.principal,expected_principal,atol=1e-7,rtol=1e-12)
+                or not np.array_equal(events.days,expected_days)
+                or not np.allclose(events.amount,events.principal*events.annual_rate*events.days/360,atol=1e-9,rtol=1e-12)):
+            raise AssertionError('Interest event accounting failed')
+        interest = events.groupby('date').amount.sum().reindex(dates,fill_value=0.)
+    reconstructed_cash = result.initial_cash + (incoming + interest - outgoing).cumsum()
     errors = {'cash_error': float((daily['cash']-reconstructed_cash).abs().max())}
     for col in daily.filter(regex='_shares$'):
         s = col.removesuffix('_shares')
